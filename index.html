@@ -1,0 +1,2201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModernShop - 프리미엄 쇼핑몰</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="supabase-config.js"></script>
+    <script src="js/supabase-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #ffffff;
+        }
+
+        /* Header Styles */
+        .header {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-menu a:hover {
+            color: #3498db;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            width: 300px;
+        }
+
+        .search-container input {
+            border: none;
+            background: none;
+            outline: none;
+            width: 100%;
+            padding: 0.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #333;
+            cursor: pointer;
+            position: relative;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .header-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .user-icon {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #333;
+            cursor: pointer;
+            position: relative;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .user-icon:hover {
+            background: #f8f9fa;
+            color: #007bff;
+        }
+
+        /* Admin Panel Styles */
+        .admin-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .tab-btn.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            background: #f8f9fa;
+        }
+
+        .tab-btn:hover {
+            background: #f8f9fa;
+            color: #007bff;
+        }
+
+        .admin-tab-content {
+            min-height: 400px;
+        }
+
+        .admin-actions {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* Product Form Styles */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ddd;
+        }
+
+        /* Image Upload Styles */
+        .image-upload-container {
+            margin-top: 0.5rem;
+        }
+
+        .image-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .image-upload-area:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+
+        .image-upload-area i {
+            font-size: 2rem;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+
+        .image-upload-area p {
+            margin: 0.5rem 0;
+            color: #666;
+        }
+
+        .upload-hint {
+            font-size: 0.875rem;
+            color: #999;
+        }
+
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-url-input {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Product List Styles */
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .product-card-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .product-card-content {
+            padding: 1.5rem;
+        }
+
+        .product-card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .product-card-brand {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-card-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+
+        .product-card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .product-stock {
+            background: #e9ecef;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .product-stock.low {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .product-stock.out {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* 추가 관리자 패널 스타일 */
+        .product-registration {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .product-registration h4 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #007bff;
+        }
+
+        .product-form {
+            max-width: 800px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .product-list-management {
+            margin-top: 2rem;
+        }
+
+        .product-list-management h4 {
+            color: #333;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #28a745;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .admin-product-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .admin-product-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 1rem;
+        }
+
+        .admin-product-info {
+            flex: 1;
+        }
+
+        .admin-product-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.25rem;
+        }
+
+        .admin-product-details {
+            color: #666;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 이미지 업로드 관련 스타일 */
+        .image-upload-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .radio-option:hover {
+            background-color: #f8f9fa;
+        }
+
+        .radio-option input[type="radio"] {
+            margin: 0;
+        }
+
+        .radio-option input[type="radio"]:checked + span {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            min-height: 100px;
+        }
+
+        .image-preview-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #ddd;
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .image-preview-item .remove-btn:hover {
+            background: rgba(255, 0, 0, 1);
+        }
+
+        /* 주문내역 모달 스타일 */
+        .order-history-content {
+            max-width: 900px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .order-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .order-filters select,
+        .order-filters input[type="date"] {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .order-filters button {
+            padding: 0.5rem 1rem;
+            font-size: 14px;
+        }
+
+        .order-item {
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .order-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .order-info h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .order-info p {
+            margin: 4px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .order-total h3 {
+            margin: 0;
+            color: #e74c3c;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-주문접수 { 
+            background: #e3f2fd; 
+            color: #1976d2; 
+        }
+        .status-처리중 { 
+            background: #fff3e0; 
+            color: #f57c00; 
+        }
+        .status-배송중 { 
+            background: #e8f5e8; 
+            color: #388e3c; 
+        }
+        .status-완료 { 
+            background: #f3e5f5; 
+            color: #7b1fa2; 
+        }
+        .status-취소 { 
+            background: #ffebee; 
+            color: #d32f2f; 
+        }
+
+        .order-products {
+            margin-bottom: 15px;
+        }
+
+        .order-product {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #fafafa;
+        }
+
+        .order-product img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .product-details h5 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .product-details p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .order-actions button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .empty-orders {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-orders i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .loading-orders {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-orders i {
+            font-size: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 사이트 설정 스타일 */
+        .settings-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .settings-section h4 {
+            color: #495057;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-form {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .settings-form .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .settings-form .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .settings-form .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .settings-form .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .settings-form .form-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .settings-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .settings-actions .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .settings-form .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-actions {
+                flex-direction: column;
+            }
+            
+            .settings-actions .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .admin-order-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-id {
+            font-weight: 600;
+            color: #007bff;
+        }
+
+        .order-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .order-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .order-status.processing {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .order-status.shipping {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .order-status.completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .order-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* 상품 등록 폼 입력 필드 스타일 수정 */
+        .product-form .form-group input,
+        .product-form .form-group textarea,
+        .product-form .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: white !important;
+            color: #333 !important;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .product-form .form-group input:focus,
+        .product-form .form-group textarea:focus,
+        .product-form .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            background-color: white !important;
+            color: #333 !important;
+        }
+
+        .product-form .form-group input:not(:disabled):not(:read-only) {
+            background-color: white !important;
+            color: #333 !important;
+        }
+
+        .product-form .form-group input:hover,
+        .product-form .form-group textarea:hover,
+        .product-form .form-group select:hover {
+            border-color: #007bff;
+            background-color: white !important;
+        }
+
+        .product-form .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .product-form .form-group small {
+            display: block;
+            margin-top: 0.25rem;
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        .product-form .form-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-start;
+        }
+
+        /* 관리자 모달 스크롤 개선 */
+        .admin-modal .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .admin-modal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+
+        .product-registration {
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .product-list-management {
+            max-height: 50vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Main Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .cta-btn {
+            background: #fff;
+            color: #667eea;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Categories Section */
+        .categories {
+            padding: 4rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .category-card {
+            background: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .category-image {
+            height: 200px;
+            background: linear-gradient(45deg, #3498db, #9b59b6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+
+        .category-info {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .category-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        /* Featured Products */
+        .featured-products {
+            background: #f8f9fa;
+            padding: 4rem 2rem;
+        }
+
+        .products-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            height: 250px;
+            background: linear-gradient(45deg, #ff6b6b, #ffa500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            position: relative;
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .product-price {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 1rem;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #2980b9;
+        }
+
+        /* Footer */
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 3rem 2rem 1rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            color: #3498db;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul li a {
+            color: #bdc3c7;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section ul li a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            border-top: 1px solid #34495e;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            color: #95a5a6;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .search-container {
+                width: 100%;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 1rem;
+            top: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="#" class="logo">ModernShop</a>
+            
+            <nav>
+                <ul class="nav-menu">
+                    <li><a href="#" onclick="showProducts('전체')">전체상품</a></li>
+                    <li><a href="#" onclick="showProducts('패션')">패션</a></li>
+                    <li><a href="#" onclick="showProducts('전자제품')">전자제품</a></li>
+                    <li><a href="#" onclick="showProducts('뷰티')">뷰티</a></li>
+                    <li><a href="#" onclick="showProducts('홈&리빙')">홈&리빙</a></li>
+                </ul>
+            </nav>
+
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="검색어를 입력하세요...">
+                <i class="fas fa-search" style="color: #666; cursor: pointer;" onclick="search()"></i>
+            </div>
+
+            <div class="header-actions">
+                <div class="user-icon" id="loginBtn">
+                    <i class="fas fa-user"></i>
+                </div>
+                <button class="header-btn" onclick="toggleCart()">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+                <button class="header-btn" onclick="showOrderHistory()" title="주문내역">
+                    <i class="fas fa-list"></i>
+                </button>
+                <button class="header-btn" onclick="showAddProduct()" id="addProductBtn" style="display: none;" title="상품등록">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button class="header-btn" onclick="showAdminPanel()" id="adminBtn" style="display: none;" title="관리자패널">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="header-btn" onclick="logout()" id="logoutBtn" style="display: none;" title="로그아웃">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Banner -->
+    <section class="hero-banner">
+        <div class="hero-content">
+            <h1>프리미엄 쇼핑의 새로운 경험</h1>
+            <p>최고 품질의 상품들을 특별한 가격으로 만나보세요</p>
+            <button class="cta-btn" onclick="scrollToProducts()">지금 쇼핑하기</button>
+        </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="categories">
+        <h2 class="section-title">카테고리</h2>
+        <div class="category-grid">
+            <div class="category-card" onclick="showProducts('패션')">
+                <div class="category-image">
+                    <i class="fas fa-tshirt"></i>
+                </div>
+                <div class="category-info">
+                    <h3>패션</h3>
+                    <p>최신 트렌드의 의류와 액세서리</p>
+                </div>
+            </div>
+            
+            <div class="category-card" onclick="showProducts('전자제품')">
+                <div class="category-image">
+                    <i class="fas fa-laptop"></i>
+                </div>
+                <div class="category-info">
+                    <h3>전자제품</h3>
+                    <p>혁신적인 기술의 전자제품</p>
+                </div>
+            </div>
+            
+            <div class="category-card" onclick="showProducts('뷰티')">
+                <div class="category-image">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <div class="category-info">
+                    <h3>뷰티</h3>
+                    <p>프리미엄 화장품과 스킨케어</p>
+                </div>
+            </div>
+            
+            <div class="category-card" onclick="showProducts('홈&리빙')">
+                <div class="category-image">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div class="category-info">
+                    <h3>홈&리빙</h3>
+                    <p>편안한 생활을 위한 홈 인테리어</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="featured-products" id="productsSection">
+        <div class="products-container">
+            <h2 class="section-title">추천 상품</h2>
+            <div class="products-grid" id="productsGrid">
+                <!-- Products will be dynamically loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>회사정보</h3>
+                <ul>
+                    <li><a href="#">회사소개</a></li>
+                    <li><a href="#">채용정보</a></li>
+                    <li><a href="#">이용약관</a></li>
+                    <li><a href="#">개인정보처리방침</a></li>
+                </ul>
+                <div class="company-info">
+                    <p><strong class="footer-company-name">ModernShop</strong></p>
+                    <p class="footer-company-address">서울특별시 강남구 테헤란로 123, 10층</p>
+                    <p class="footer-business-number">사업자등록번호: 123-45-67890</p>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3>고객센터</h3>
+                <ul>
+                    <li><a href="tel:1588-0000" class="footer-phone">1588-0000</a></li>
+                    <li><a href="mailto:help@modernshop.com" class="footer-email">help@modernshop.com</a></li>
+                    <li><a href="#" class="footer-faq">FAQ</a></li>
+                    <li><a href="#" class="footer-inquiry">1:1 문의</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>배송/교환/반품</h3>
+                <ul>
+                    <li><a href="#">배송조회</a></li>
+                    <li><a href="#">교환/반품 안내</a></li>
+                    <li><a href="#">배송비 안내</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>소셜미디어</h3>
+                <ul>
+                    <li><a href="#"><i class="fab fa-instagram"></i> Instagram</a></li>
+                    <li><a href="#"><i class="fab fa-facebook"></i> Facebook</a></li>
+                    <li><a href="#"><i class="fab fa-youtube"></i> YouTube</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 ModernShop. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddProduct()">&times;</span>
+            <h2>상품 등록</h2>
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label>상품명</label>
+                    <input type="text" id="productName" required>
+                </div>
+                <div class="form-group">
+                    <label>가격</label>
+                    <input type="number" id="productPrice" required>
+                </div>
+                <div class="form-group">
+                    <label>브랜드</label>
+                    <input type="text" id="productBrand" required placeholder="예: Nike, Apple, Samsung">
+                </div>
+                <div class="form-group">
+                    <label>카테고리</label>
+                    <select id="productCategory" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px;">
+                        <option value="패션">패션</option>
+                        <option value="전자제품">전자제품</option>
+                        <option value="뷰티">뷰티</option>
+                        <option value="홈&리빙">홈&리빙</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>상품 설명</label>
+                    <textarea id="productDescription" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px; height: 100px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>상품 이미지</label>
+                    <input type="file" id="productImages" multiple accept="image/*" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px;">
+                    <small style="color: #666; font-size: 0.8rem;">최대 10개 이미지, 각 파일 최대 5MB (JPEG, PNG, GIF, WebP)</small>
+                </div>
+                <div class="form-group">
+                    <label>재고 수량</label>
+                    <input type="number" id="productStock" min="0" value="0" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div class="form-group">
+                    <label>상품 무게 (kg)</label>
+                    <input type="number" id="productWeight" step="0.1" min="0" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div class="form-group">
+                    <label>상품 크기 (가로x세로x높이)</label>
+                    <input type="text" id="productDimensions" placeholder="예: 30x20x10" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div class="form-group">
+                    <label>상품 태그 (쉼표로 구분)</label>
+                    <input type="text" id="productTags" placeholder="예: 운동화, 나이키, 스니커즈" style="width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 8px;">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="productFeatured" style="margin-right: 0.5rem;">
+                        추천 상품으로 설정
+                    </label>
+                </div>
+                <button type="submit" class="cta-btn" style="width: 100%; margin-top: 1rem;">상품 등록</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCart()">&times;</span>
+            <h2>장바구니</h2>
+            <div id="cartItems">
+                <!-- Cart items will be displayed here -->
+            </div>
+            <div style="margin-top: 1rem; border-top: 1px solid #ddd; padding-top: 1rem;">
+                <h3 id="totalPrice">총 금액: 0원</h3>
+                <button class="cta-btn" style="width: 100%; margin-top: 1rem;" onclick="checkout()">주문하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeLogin()">&times;</span>
+            <div id="loginContent">
+                <h2>로그인</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" id="loginEmail" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호</label>
+                        <input type="password" id="loginPassword" required autocomplete="current-password" minlength="6">
+                    </div>
+                    <button type="submit" class="cta-btn" style="width: 100%;">로그인</button>
+                </form>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <p>계정이 없으신가요? <a href="#" onclick="showSignup()" style="color: #3498db;">회원가입</a></p>
+                </div>
+            </div>
+            
+            <div id="signupContent" style="display: none;">
+                <h2>회원가입</h2>
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label>이름</label>
+                        <input type="text" id="signupName" required autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label>이메일</label>
+                        <input type="email" id="signupEmail" required autocomplete="email">
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호</label>
+                        <input type="password" id="signupPassword" required autocomplete="new-password" minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>비밀번호 확인</label>
+                        <input type="password" id="signupPasswordConfirm" required autocomplete="new-password" minlength="6">
+                    </div>
+                    <button type="submit" class="cta-btn" style="width: 100%;">가입 신청</button>
+                </form>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <p>이미 계정이 있으신가요? <a href="#" onclick="showLogin()" style="color: #3498db;">로그인</a></p>
+                </div>
+                <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                    <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                    <small style="color: #155724;">회원가입 후 바로 로그인할 수 있습니다.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="modal admin-modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <span class="close" onclick="closeAdminPanel()">&times;</span>
+            <h2>관리자 패널</h2>
+            
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="showAdminTab('users')">
+                    <i class="fas fa-users"></i> 사용자 관리
+                </button>
+                <button class="tab-btn" onclick="showAdminTab('products')">
+                    <i class="fas fa-box"></i> 상품 관리
+                </button>
+                <button class="tab-btn" onclick="showAdminTab('orders')">
+                    <i class="fas fa-shopping-cart"></i> 주문 관리
+                </button>
+                <button class="tab-btn" onclick="showAdminTab('settings')">
+                    <i class="fas fa-cog"></i> 사이트 설정
+                </button>
+            </div>
+            
+            <div id="adminContent">
+                <!-- 사용자 관리 탭 -->
+                <div id="usersTab" class="admin-tab-content">
+                    <h3>사용자 관리</h3>
+                    <div class="admin-actions">
+                        <button onclick="loadPendingUsers()" class="btn btn-warning">
+                            <i class="fas fa-clock"></i> 대기중인 회원 (<span id="pendingCount">0</span>)
+                        </button>
+                        <button onclick="loadAllUsers()" class="btn btn-success">
+                            <i class="fas fa-users"></i> 전체 회원 관리
+                        </button>
+                    </div>
+                    <div id="usersList"></div>
+                </div>
+                
+                <!-- 상품 관리 탭 -->
+                <div id="productsTab" class="admin-tab-content" style="display: none;">
+                    <h3>상품 관리</h3>
+                    
+                    <!-- 새 상품 등록 섹션 -->
+                    <div class="product-registration">
+                        <h4>새 상품 등록</h4>
+                        <form id="productRegistrationForm" class="product-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="newProductName">상품명 *</label>
+                                    <input type="text" id="newProductName" name="productName" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newProductBrand">브랜드 *</label>
+                                    <input type="text" id="newProductBrand" name="productBrand" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newProductPrice">가격 *</label>
+                                    <input type="number" id="newProductPrice" name="productPrice" min="0" step="100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newProductCategory">카테고리 *</label>
+                                    <select id="newProductCategory" name="productCategory" required>
+                                        <option value="">카테고리 선택</option>
+                                        <option value="패션">패션</option>
+                                        <option value="전자제품">전자제품</option>
+                                        <option value="뷰티">뷰티</option>
+                                        <option value="홈&리빙">홈&리빙</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="newProductDescription">상세설명</label>
+                                <textarea id="newProductDescription" name="productDescription" rows="3" placeholder="상품에 대한 자세한 설명을 입력하세요"></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>이미지 등록 방식</label>
+                                <div class="image-upload-options">
+                                    <label class="radio-option">
+                                        <input type="radio" name="imageMethod" value="url" checked>
+                                        <span>URL 입력</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="imageMethod" value="file">
+                                        <span>파일 업로드</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="imageUrlSection" class="form-group">
+                                <label for="newProductImageUrl">이미지 URL</label>
+                                <input type="url" id="newProductImageUrl" name="productImageUrl" placeholder="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=300&fit=crop&auto=format">
+                                <small>상품 이미지 URL을 입력하세요</small>
+                            </div>
+
+                            <div id="imageFileSection" class="form-group" style="display: none;">
+                                <label for="newProductImageFile">이미지 파일</label>
+                                <input type="file" id="newProductImageFile" name="productImageFile" accept="image/*" multiple>
+                                <small>이미지 파일을 선택하세요 (최대 5개)</small>
+                                <div id="imagePreview" class="image-preview-container"></div>
+                            </div>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="newProductStock">재고 수량 *</label>
+                                    <input type="number" id="newProductStock" name="productStock" value="0" min="0" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="newProductDiscount">할인율 (%)</label>
+                                    <input type="number" id="newProductDiscount" name="productDiscount" value="0" min="0" max="100">
+                                </div>
+                            </div>
+                            
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> 상품 등록
+                                </button>
+                                <button type="button" onclick="resetProductForm()" class="btn btn-secondary">
+                                    <i class="fas fa-eraser"></i> 폼 초기화
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- 기존 상품 관리 섹션 -->
+                    <div class="product-list-management">
+                        <h4>등록된 상품 목록</h4>
+                        <div class="admin-actions">
+                            <button onclick="refreshProductList()" class="btn btn-info">
+                                <i class="fas fa-sync"></i> 목록 새로고침
+                            </button>
+                        </div>
+                        <div id="adminProductList">
+                            <!-- 상품 목록이 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 주문 관리 탭 -->
+                <div id="ordersTab" class="admin-tab-content" style="display: none;">
+                    <h3>주문 내역 관리</h3>
+                    <div class="admin-actions">
+                        <button onclick="loadAdminOrders()" class="btn btn-info">
+                            <i class="fas fa-sync"></i> 주문 목록 새로고침
+                        </button>
+                    </div>
+                    <div id="adminOrderList">
+                        <!-- 주문 내역이 여기에 표시됩니다 -->
+                    </div>
+                </div>
+                
+                <!-- 사이트 설정 탭 -->
+                <div id="settingsTab" class="admin-tab-content" style="display: none;">
+                    <h3>사이트 설정</h3>
+                    
+                    <!-- 고객센터 정보 섹션 -->
+                    <div class="settings-section">
+                        <h4><i class="fas fa-headset"></i> 고객센터 정보</h4>
+                        <form id="customerServiceForm" class="settings-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="customerPhone">전화번호</label>
+                                    <input type="text" id="customerPhone" name="customer_phone" placeholder="1588-0000">
+                                </div>
+                                <div class="form-group">
+                                    <label for="customerEmail">이메일</label>
+                                    <input type="email" id="customerEmail" name="customer_email" placeholder="help@modernshop.com">
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="faqLink">FAQ 링크</label>
+                                    <input type="text" id="faqLink" name="faq_link" placeholder="/faq">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inquiryLink">1:1 문의 링크</label>
+                                    <input type="text" id="inquiryLink" name="inquiry_link" placeholder="/inquiry">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 고객센터 정보 저장
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- 회사 정보 섹션 -->
+                    <div class="settings-section">
+                        <h4><i class="fas fa-building"></i> 회사 정보</h4>
+                        <form id="companyInfoForm" class="settings-form">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="companyName">회사명</label>
+                                    <input type="text" id="companyName" name="company_name" placeholder="ModernShop">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyCeo">대표자</label>
+                                    <input type="text" id="companyCeo" name="company_ceo" placeholder="홍길동">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="companyAddress">주소</label>
+                                <input type="text" id="companyAddress" name="company_address" placeholder="서울특별시 강남구 테헤란로 123, 10층">
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="telecomLicense">통신판매업신고번호</label>
+                                    <input type="text" id="telecomLicense" name="telecom_license" placeholder="2024-서울강남-01234">
+                                </div>
+                                <div class="form-group">
+                                    <label for="businessNumber">사업자등록번호</label>
+                                    <input type="text" id="businessNumber" name="business_number" placeholder="123-45-67890">
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="companyWebsite">웹사이트</label>
+                                    <input type="url" id="companyWebsite" name="company_website" placeholder="https://modernshop.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyDescription">회사 설명</label>
+                                    <input type="text" id="companyDescription" name="company_description" placeholder="프리미엄 온라인 쇼핑몰">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 회사 정보 저장
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- 설정 초기화 섹션 -->
+                    <div class="settings-section">
+                        <h4><i class="fas fa-refresh"></i> 설정 관리</h4>
+                        <div class="settings-actions">
+                            <button onclick="loadSiteSettings()" class="btn btn-secondary">
+                                <i class="fas fa-sync"></i> 설정 새로고침
+                            </button>
+                            <button onclick="resetSiteSettings()" class="btn btn-warning">
+                                <i class="fas fa-undo"></i> 기본값으로 초기화
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="closeProductModal()">&times;</span>
+            <h2 id="productModalTitle">상품 추가</h2>
+            <form id="productForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modalProductName">상품명 *</label>
+                        <input type="text" id="modalProductName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalProductBrand">브랜드명 *</label>
+                        <input type="text" id="modalProductBrand" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modalProductPrice">가격 *</label>
+                        <input type="number" id="modalProductPrice" min="0" step="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalProductCategory">카테고리 *</label>
+                        <select id="modalProductCategory" required>
+                            <option value="">카테고리 선택</option>
+                            <option value="패션">패션</option>
+                            <option value="전자제품">전자제품</option>
+                            <option value="뷰티">뷰티</option>
+                            <option value="홈&리빙">홈&리빙</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modalProductStock">재고 수량 *</label>
+                        <input type="number" id="modalProductStock" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalProductDiscount">할인율 (%)</label>
+                        <input type="number" id="modalProductDiscount" min="0" max="100" step="1">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalProductDescription">상세설명</label>
+                    <textarea id="modalProductDescription" rows="4" placeholder="상품에 대한 자세한 설명을 입력하세요"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>상품 이미지</label>
+                    <div class="image-upload-container">
+                        <div class="image-upload-area" onclick="document.getElementById('imageInput').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>이미지를 드래그하거나 클릭하여 업로드</p>
+                            <p class="upload-hint">최대 5개, JPG/PNG/GIF 지원</p>
+                        </div>
+                        <input type="file" id="imageInput" multiple accept="image/*" style="display: none;">
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="imageUrls">또는 이미지 URL 직접 입력</label>
+                    <div id="imageUrlInputs">
+                        <input type="url" class="image-url-input" placeholder="https://example.com/image1.jpg">
+                    </div>
+                    <button type="button" onclick="addImageUrlInput()" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i> URL 추가
+                    </button>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeProductModal()" class="btn btn-secondary">취소</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global variables (supabase-app.js에서 선언됨)
+        const ORDER_STATUSES = ['주문접수', '처리중', '배송중', '완료'];
+        const companyProfile = {
+            name: 'ModernShop Inc.',
+            bizNumber: '123-45-67890',
+            tel: '1588-0000',
+            email: 'help@modernshop.com',
+            address: '서울특별시 강남구 테크로 100',
+            logoText: 'ModernShop'
+        };
+        // localStorage 기반 변수들 제거됨 - Supabase 사용
+
+
+
+        // Product management functions removed - now using Supabase
+
+
+        // Add product functionality removed - now using Supabase
+
+        // Add product form event listener removed - now using Supabase
+
+        // Cart functionality removed - now using Supabase
+
+        // Checkout functionality removed - now using Supabase
+
+        // showOrderConfirmation function removed - now using Supabase
+
+        // Order history function removed - now using Supabase
+
+        // Search functionality removed - now using Supabase
+
+        // Enter key search event listener removed - now using Supabase
+
+        // Login modal functions removed - now using Supabase
+
+        // Form event listeners removed - now using Supabase
+
+        // User management functions removed - now using Supabase
+
+        // Modal functions removed - now using Supabase
+
+        // Admin panel functions removed - now using Supabase
+
+        // Admin Orders Management functions removed - now using Supabase
+
+        // Mock API functions removed - now using Supabase
+
+        // localStorage functions removed - now using Supabase
+
+        // PDF generation using jsPDF
+        // Ensure Korean font is fetched and cached (register per-document)
+        let pdfKoreanFontBase64 = null;
+        async function ensureKoreanFontLoaded() {
+            if (pdfKoreanFontBase64) return pdfKoreanFontBase64;
+            const fontUrl = 'https://fonts.gstatic.com/s/notosanskr/v36/PbykFmXiEBPT4ITbgNA5Cgm20xz64px_1hVWr0wuPNGmlQNMEfD4.woff2';
+            const resp = await fetch(fontUrl);
+            if (!resp.ok) {
+                console.warn('한글 폰트 로드 실패, 기본 폰트로 진행합니다.');
+                return null; // 폰트 로드 실패 시 null 반환
+            }
+            const buf = await resp.arrayBuffer();
+            let binary = '';
+            const bytes = new Uint8Array(buf);
+            const chunkSize = 0x8000;
+            for (let i = 0; i < bytes.length; i += chunkSize) {
+                binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+            }
+            pdfKoreanFontBase64 = btoa(binary);
+            return pdfKoreanFontBase64;
+        }
+
+        async function generateAndOfferOrderPdf(order) {
+            const { jsPDF } = window.jspdf || {};
+            if (!jsPDF) throw new Error('jsPDF가 로드되지 않았습니다.');
+            const base64 = await ensureKoreanFontLoaded();
+
+            const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+            
+            // 한글 폰트가 로드된 경우에만 등록
+            if (base64) {
+                doc.addFileToVFS('NotoSansKR.ttf', base64);
+                doc.addFont('NotoSansKR.ttf', 'NotoSansKR', 'normal');
+                doc.setFont('NotoSansKR', 'normal');
+            } else {
+                // 폰트 로드 실패 시 기본 폰트 사용
+                doc.setFont('helvetica', 'normal');
+                console.warn('한글 폰트 로드 실패, 기본 폰트로 PDF 생성합니다.');
+            }
+            let y = 40;
+
+            // Header with logo text
+            doc.setFont('NotoSansKR', 'normal');
+            doc.setFontSize(20);
+            doc.text(companyProfile.logoText, 40, y);
+            doc.setFontSize(12);
+            y += 20;
+            doc.setFont('NotoSansKR', 'normal');
+            doc.text(`${companyProfile.name}`, 40, y); y += 16;
+            doc.text(`사업자등록번호: ${companyProfile.bizNumber}`, 40, y); y += 16;
+            doc.text(`연락처: ${companyProfile.tel}  이메일: ${companyProfile.email}`, 40, y); y += 16;
+            doc.text(`주소: ${companyProfile.address}`, 40, y); y += 24;
+
+            // Title
+            doc.setFont('NotoSansKR', 'normal');
+            doc.setFontSize(16);
+            doc.text('주문서 / 영수증', 40, y); y += 20;
+            doc.setFontSize(12);
+            doc.setFont('NotoSansKR', 'normal');
+            doc.text(`주문번호: ${order.orderNumber}`, 40, y); y += 16;
+            doc.text(`주문일자: ${order.date}`, 40, y); y += 16;
+            doc.text(`주문자: ${order.userName}`, 40, y); y += 24;
+
+            // Items table (simple)
+            doc.setFont('NotoSansKR', 'normal');
+            doc.text('상품명', 40, y); doc.text('수량', 340, y); doc.text('금액', 420, y);
+            y += 12; doc.setLineWidth(0.5); doc.line(40, y, 550, y); y += 14;
+            doc.setFont('NotoSansKR', 'normal');
+            order.items.forEach(item => {
+                const name = `${item.brand} ${item.name}`;
+                doc.text(name, 40, y);
+                doc.text(String(item.quantity), 350, y, { align: 'right' });
+                doc.text(`${(item.price * item.quantity).toLocaleString()}원`, 540, y, { align: 'right' });
+                y += 16;
+            });
+            y += 6; doc.line(40, y, 550, y); y += 20;
+
+            // Total
+            doc.setFont('NotoSansKR', 'normal');
+            doc.text(`총 금액: ${order.total.toLocaleString()}원`, 540, y, { align: 'right' });
+            y += 30;
+
+            // Footer
+            doc.setFont('NotoSansKR', 'normal');
+            doc.setTextColor(120);
+            doc.text('본 문서는 전자적으로 생성된 주문서입니다.', 40, y);
+
+            const filename = `Order_${order.orderNumber}.pdf`;
+            doc.save(filename);
+        }
+
+        // reDownloadOrderPdf function removed - now using Supabase
+
+        // EmailJS 설정은 config.js에서 관리됨
+
+        // notifyBusinessNewOrder function removed - now using Supabase
+
+        // Categories removed - now using Supabase
+
+        // localStorage functions removed - now using Supabase
+
+        // Add CSS animation for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            .add-to-cart-btn:disabled {
+                background: #bdc3c7 !important;
+                cursor: not-allowed !important;
+                opacity: 0.6;
+            }
+            
+            .add-to-cart-btn:disabled:hover {
+                background: #bdc3c7 !important;
+                transform: none !important;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <!-- 주문내역 모달 -->
+    <div id="orderHistoryModal" class="modal">
+        <div class="modal-content order-history-content">
+            <span class="close" onclick="closeOrderHistory()">&times;</span>
+            <h2>나의 주문 내역</h2>
+            
+            <div class="order-filters">
+                <select id="orderStatusFilter">
+                    <option value="">전체 상태</option>
+                    <option value="주문접수">주문접수</option>
+                    <option value="처리중">처리중</option>
+                    <option value="배송중">배송중</option>
+                    <option value="완료">완료</option>
+                    <option value="취소">취소</option>
+                </select>
+                <input type="date" id="orderDateFrom" placeholder="시작일">
+                <input type="date" id="orderDateTo" placeholder="종료일">
+                <button onclick="filterOrders()" class="btn btn-primary">필터 적용</button>
+                <button onclick="resetOrderFilters()" class="btn btn-secondary">초기화</button>
+            </div>
+            
+            <div id="orderHistoryList">
+                <!-- 주문 내역이 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>
